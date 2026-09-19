@@ -6,7 +6,11 @@
 const GROUND_COLOR = 0xaeaeae;
 const GROUND_SHADOW_OPACITY = 0.45;
 const DEFAULT_CAMERA_ELEVATION_DEG = 45;
-const DEFAULT_CAMERA_AZIMUTH_DEG = 35; // arbitrary pleasing default, offset from the light
+const DEFAULT_CAMERA_AZIMUTH_DEG = 0; // straight on: cube edges run parallel to the screen edges
+// The light rides with the camera, this many degrees to its left (the spec's
+// 45deg horizontal light angle). Keeping it off the camera axis is what makes
+// shadows and face-to-face shading visible from every view.
+const LIGHT_AZIMUTH_OFFSET_DEG = -45;
 // Stops just short of straight up/down, where lookAt's up vector degenerates.
 const CAMERA_ELEVATION_LIMIT_DEG = 89.5;
 const CAMERA_SNAP_MS = 350;
@@ -80,7 +84,7 @@ function setupLighting() {
 
 function positionLightAt45(light) {
   const elevationRad = THREE.MathUtils.degToRad(45);
-  const azimuthRad = THREE.MathUtils.degToRad(0); // light's own azimuth, camera is offset from it
+  const azimuthRad = THREE.MathUtils.degToRad(cameraAzimuthDeg + LIGHT_AZIMUTH_OFFSET_DEG);
   const distance = 20;
   light.position.set(
     cameraTarget.x + distance * Math.cos(elevationRad) * Math.sin(azimuthRad),
@@ -176,7 +180,6 @@ function onWindowResize() {
 
 function renderLoop() {
   requestAnimationFrame(renderLoop);
-  updateControls();
   updateCameraSnap();
   // Re-applied every frame (cheap) so a recentered pivot (after a drag)
   // is reflected immediately, not just on the next explicit zoom/rotate.

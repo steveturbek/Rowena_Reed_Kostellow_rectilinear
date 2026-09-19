@@ -10,7 +10,7 @@ Weekend workshop project to make a Web based 3D modeling toy to help students qu
 
 Render three random cubes. User can:
 
-- spin cube group, zoom in and out
+- orbit the camera around the cubes, zoom in and out
 - select each, with mouse and keyboard
 - push/pull a face to resize a cube (CAD-style extrude)
 - select a whole cube and drag it to move it in relation to the other two
@@ -26,7 +26,7 @@ The three cuboids always stay connected (each touches at least one of the others
 - camera starts at a 45 degree angle to center of object, default zoom to see all cubes. The view cube can leave that view.
 - User can zoom in and out
 - objects collection can rotate on center of base face
-- bright white single studio light positioned at a 45-degree horizontal angle and 45 degrees above the subject
+- bright white single studio light positioned at a 45-degree horizontal angle and 45 degrees above the subject, moving with the camera so every view is lit the same way
 - shadows cast on ground and other cubes
 
 ## Controls
@@ -35,8 +35,7 @@ The three cuboids always stay connected (each touches at least one of the others
 - **resize a cube:** click a face to select it (blue highlight), then click and drag it outward/inward to push/pull that side, in clean half-unit steps
 - clicking a face of an already-selected cube (without dragging) switches back to selecting just that face
 - Escape clears the current selection
-- mouse wheel, or up/down arrow keys, to zoom in and out
-- left/right arrow keys rotate the whole group around its base center
+- **trackpad:** a two-finger swipe orbits the camera (like dragging the view cube), a pinch zooms. With a mouse, Ctrl + scroll zooms.
 - **view cube** (top right, like Fusion 360): drag it to orbit the camera, click one of its faces to snap the camera to that view (top, front, left, ...). A face you are looking at head-on can't be push/pulled, so nudge the view first.
 
 ## Technical
@@ -65,7 +64,7 @@ The three cuboids always stay connected (each touches at least one of the others
 │   ├── cubes.js         # cube data model, random generation, "must touch" rule
 │   ├── selection.js      # click/double-click/Tab picking, highlight visuals
 │   ├── manipulate.js      # drag-to-move and push/pull-to-resize
-│   ├── controls.js         # keyboard + mouse-wheel rotate/zoom
+│   ├── controls.js         # trackpad: swipe = orbit, pinch = zoom
 │   ├── viewcube.js          # top-right view cube: drag to orbit, click a face to snap
 │   └── main.js               # wires the modules together, starts the render loop
 ```

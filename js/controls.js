@@ -1,45 +1,27 @@
-// Camera/group controls: left/right arrows spin the cube group, up/down
-// arrows and the mouse wheel zoom. Held arrow keys animate smoothly via
-// updateControls(), called once per frame from the render loop.
+// Trackpad input: a two-finger swipe orbits the camera (like dragging the
+// view cube) and a pinch zooms. Browsers report a pinch as a wheel event with
+// ctrlKey set, so Ctrl + scroll on a mouse wheel zooms too.
 
-const ROTATE_SPEED = 1.2; // radians per second
-const KEY_ZOOM_SPEED = 8; // world units per second
-const WHEEL_ZOOM_SPEED = 0.01; // world units per wheel-delta unit
-
-const ARROW_KEYS = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
-
-let heldKeys = new Set();
-let lastFrameTime = performance.now();
+const SWIPE_ORBIT_DEG_PER_PX = 0.3;
+const PINCH_ZOOM_PER_PX = 0.01;
+const PINCH_MAX_DELTA_PX = 30; // keeps a Ctrl + mouse-wheel notch from jumping
 
 function initControls() {
-  window.addEventListener("keydown", onControlsKeyDown);
-  window.addEventListener("keyup", onControlsKeyUp);
-  renderer.domElement.addEventListener("wheel", onWheel, { passive: false });
-}
-
-function onControlsKeyDown(event) {
-  if (ARROW_KEYS.includes(event.key)) {
-    event.preventDefault();
-    heldKeys.add(event.key);
-  }
-}
-
-function onControlsKeyUp(event) {
-  heldKeys.delete(event.key);
+  // Non-passive so preventDefault can stop the browser's own page zoom and
+  // its two-finger back/forward swipe.
+  window.addEventListener("wheel", onWheel, { passive: false });
 }
 
 function onWheel(event) {
   event.preventDefault();
-  setCameraDistance(cameraDistance + event.deltaY * WHEEL_ZOOM_SPEED);
-}
 
-function updateControls() {
-  const now = performance.now();
-  const dt = Math.min((now - lastFrameTime) / 1000, 0.1);
-  lastFrameTime = now;
+  if (event.ctrlKey) {
+    const delta = THREE.MathUtils.clamp(event.deltaY, -PINCH_MAX_DELTA_PX, PINCH_MAX_DELTA_PX);
+    setCameraDistance(cameraDistance * Math.exp(delta * PINCH_ZOOM_PER_PX));
+    return;
+  }
 
-  if (heldKeys.has("ArrowLeft")) cubeGroup.rotation.y += ROTATE_SPEED * dt;
-  if (heldKeys.has("ArrowRight")) cubeGroup.rotation.y -= ROTATE_SPEED * dt;
-  if (heldKeys.has("ArrowUp")) setCameraDistance(cameraDistance - KEY_ZOOM_SPEED * dt);
-  if (heldKeys.has("ArrowDown")) setCameraDistance(cameraDistance + KEY_ZOOM_SPEED * dt);
+  // With macOS natural scrolling the deltas are the opposite of the fingers'
+  // motion; these signs make a swipe match dragging the view cube.
+  orbitCameraBy(event.deltaX * SWIPE_ORBIT_DEG_PER_PX, -event.deltaY * SWIPE_ORBIT_DEG_PER_PX);
 }
