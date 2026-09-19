@@ -13,7 +13,7 @@ Render three random cubes. User can:
 - spin cube group, zoom in and out
 - select each, with mouse and keyboard
 - push/pull a face to resize a cube (CAD-style extrude)
-- drag a face sideways to move a cube in relation to the other two
+- select a whole cube and drag it to move it in relation to the other two
 
 The three cuboids always stay connected (each touches at least one of the others) - if a move or resize would break that, it snaps back.
 
@@ -31,10 +31,9 @@ The three cuboids always stay connected (each touches at least one of the others
 
 ## Controls
 
-- click on a face to select it (highlights blue)
-- drag sideways, along the face, to move the cube
-- drag outward/inward, along the face's normal, to push/pull (resize) that side of the cube, in clean half-unit steps
-- double click a cube, or press Tab / Shift+Tab, to select the whole cube (highlights with an outline)
+- **move a cube:** double click it, or press Tab / Shift+Tab, to select the whole cube (orange outline), then click and drag it
+- **resize a cube:** click a face to select it (blue highlight), then click and drag it outward/inward to push/pull that side, in clean half-unit steps
+- clicking a face of an already-selected cube (without dragging) switches back to selecting just that face
 - Escape clears the current selection
 - mouse wheel, or up/down arrow keys, to zoom in and out
 - left/right arrow keys rotate the whole group around its base center

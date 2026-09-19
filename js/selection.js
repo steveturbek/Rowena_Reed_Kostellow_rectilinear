@@ -38,11 +38,8 @@ function initSelection() {
   faceHighlightMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), decalMaterial);
   faceHighlightMesh.visible = false;
 
-  const outlineMaterial = new THREE.LineBasicMaterial({ color: 0xff9900 });
-  cubeOutlineMesh = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)),
-    outlineMaterial
-  );
+  const outlineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+  cubeOutlineMesh = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), outlineMaterial);
   cubeOutlineMesh.visible = false;
 
   renderer.domElement.addEventListener("dblclick", onDoubleClick);

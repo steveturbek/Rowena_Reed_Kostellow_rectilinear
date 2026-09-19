@@ -1,9 +1,10 @@
-// Drag handling for a selected face: dragging along the face's own plane
-// moves the cube (spec'd behavior); dragging along the face's normal
-// pushes/pulls that face in or out, CAD-style, resizing the cube along
-// that one axis while the opposite face stays anchored. Which mode wins
-// is decided once, a few pixels into the drag, by comparing the mouse
-// delta's projected component along each candidate screen direction.
+// Drag handling. What a drag does depends on the current selection:
+// - whole cube selected (double-click / Tab): dragging that cube moves it,
+//   within the plane of the face that was grabbed.
+// - otherwise, pressing on a face selects it, and dragging pushes/pulls
+//   that face in or out, CAD-style, resizing the cube along that one axis
+//   while the opposite face stays anchored.
+// A plain click on the selected cube (no drag) drops back to face selection.
 
 const DRAG_THRESHOLD_PX = 5;
 
@@ -31,7 +32,11 @@ function onManipulatePointerDown(event) {
     return;
   }
 
-  setFaceSelection(hit.cube, hit.faceKey);
+  const intent =
+    selection && selection.type === "cube" && selection.cube === hit.cube
+      ? "move"
+      : "extrude";
+  if (intent === "extrude") setFaceSelection(hit.cube, hit.faceKey);
 
   const def = FACE_DEFS[hit.faceKey];
   const axisLetter = hit.faceKey[1]; // 'x' | 'y' | 'z'
@@ -50,7 +55,7 @@ function onManipulatePointerDown(event) {
 
   // Establish, up front, how many screen pixels correspond to one world
   // unit of travel along this face's normal, at this depth/angle - used
-  // both to disambiguate the drag and to scale extrude distance later.
+  // to scale extrude distance.
   const p0 = hit.point.clone();
   const p1 = p0.clone().add(worldNormal.clone().multiplyScalar(0.1));
   const s0 = worldToScreenPx(p0);
@@ -62,6 +67,8 @@ function onManipulatePointerDown(event) {
 
   dragState = {
     cube: hit.cube,
+    faceKey: hit.faceKey,
+    intent,
     axisLetter,
     sign,
     worldNormal,
@@ -88,21 +95,12 @@ function onManipulatePointerMove(event) {
 
   if (dragState.mode === null) {
     if (totalDeltaLen < DRAG_THRESHOLD_PX) return;
-
-    if (dragState.screenNormalDir) {
-      const alongNormal = dx * dragState.screenNormalDir.x + dy * dragState.screenNormalDir.y;
-      const perpComponent = Math.sqrt(
-        Math.max(totalDeltaLen * totalDeltaLen - alongNormal * alongNormal, 0)
-      );
-      dragState.mode = Math.abs(alongNormal) > perpComponent ? "extrude" : "move";
-    } else {
-      dragState.mode = "move";
-    }
+    dragState.mode = dragState.intent;
   }
 
   if (dragState.mode === "move") {
     applyMoveDrag(event);
-  } else {
+  } else if (dragState.screenNormalDir) {
     applyExtrudeDrag(dx, dy);
   }
 }
@@ -123,7 +121,10 @@ function applyMoveDrag(event) {
 
   const cube = dragState.cube;
   cube.position.x = dragState.startSnapshot.position.x + localDelta.x;
-  cube.position.y = dragState.startSnapshot.position.y + localDelta.y;
+  cube.position.y = Math.max(
+    cube.height / 2, // bottom face stops at the floor
+    dragState.startSnapshot.position.y + localDelta.y
+  );
   cube.position.z = dragState.startSnapshot.position.z + localDelta.z;
 
   syncMeshFromData(cube);
@@ -140,6 +141,15 @@ function applyExtrudeDrag(dx, dy) {
 
   let newSize = startSize + snappedDelta;
   newSize = Math.max(UNIT_STEP, newSize);
+
+  // Pulling the bottom face down grows the cube downward from its anchored
+  // top; cap the size so the bottom can't pass through the floor.
+  if (dragState.axisLetter === "y" && dragState.sign === -1) {
+    const anchoredTop = dragState.startSnapshot.position.y + startSize / 2;
+    const maxSize = Math.floor((anchoredTop + 1e-6) / UNIT_STEP) * UNIT_STEP;
+    newSize = Math.min(newSize, maxSize);
+  }
+
   const actualDelta = newSize - startSize;
 
   cube[axisKey] = newSize;
@@ -172,6 +182,8 @@ function onManipulatePointerUp() {
       syncMeshFromData(cube);
     }
     recenterGroupPivot();
+  } else if (dragState.intent === "move") {
+    setFaceSelection(cube, dragState.faceKey);
   }
 
   dragState = null;
