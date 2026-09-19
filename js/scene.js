@@ -1,14 +1,24 @@
 // Scene, camera, lighting, ground, and the render loop.
 
-const GROUND_COLOR = 0x666666;
-const CAMERA_ELEVATION_DEG = 45;
-const CAMERA_AZIMUTH_DEG = 35; // arbitrary pleasing default, offset from the light
+// Floor and sky are this one color, shown exactly as written (0xaeaeae is
+// about how the old lit floor looked). The floor is a shadow-only plane over
+// the sky color (see setupGround), so the two always match.
+const GROUND_COLOR = 0xaeaeae;
+const GROUND_SHADOW_OPACITY = 0.45;
+const DEFAULT_CAMERA_ELEVATION_DEG = 45;
+const DEFAULT_CAMERA_AZIMUTH_DEG = 35; // arbitrary pleasing default, offset from the light
+// Stops just short of straight up/down, where lookAt's up vector degenerates.
+const CAMERA_ELEVATION_LIMIT_DEG = 89.5;
+const CAMERA_SNAP_MS = 350;
 
 let scene, camera, renderer;
 let groundMesh;
 let keyLight, fillLight;
 let cameraTarget = { x: 0, y: 0, z: 0 };
 let cameraDistance = 10;
+let cameraAzimuthDeg = DEFAULT_CAMERA_AZIMUTH_DEG;
+let cameraElevationDeg = DEFAULT_CAMERA_ELEVATION_DEG;
+let cameraSnap = null;
 
 function initScene() {
   scene = new THREE.Scene();
@@ -36,11 +46,9 @@ function initScene() {
 
 function setupGround() {
   const groundGeometry = new THREE.PlaneGeometry(500, 500);
-  const groundMaterial = new THREE.MeshStandardMaterial({
-    color: GROUND_COLOR,
-    roughness: 0.95,
-    metalness: 0,
-  });
+  // Transparent except where the key light's shadows fall, so the "floor"
+  // is the sky color itself: no lighting mismatch, no visible horizon.
+  const groundMaterial = new THREE.ShadowMaterial({ opacity: GROUND_SHADOW_OPACITY });
   groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
   groundMesh.rotation.x = -Math.PI / 2;
   groundMesh.receiveShadow = true;
@@ -82,17 +90,59 @@ function positionLightAt45(light) {
   light.target.position.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
 }
 
-// Camera stays at a fixed 45deg elevation and fixed azimuth; only
-// `cameraDistance` (zoom) and `cameraTarget` (recentered pivot) ever change.
+// Unit vector from the camera target out to the camera.
+function cameraDirection() {
+  const elevationRad = THREE.MathUtils.degToRad(cameraElevationDeg);
+  const azimuthRad = THREE.MathUtils.degToRad(cameraAzimuthDeg);
+  return new THREE.Vector3(
+    Math.cos(elevationRad) * Math.sin(azimuthRad),
+    Math.sin(elevationRad),
+    Math.cos(elevationRad) * Math.cos(azimuthRad),
+  );
+}
+
+// The camera starts at the default 45deg view; the view cube changes the
+// azimuth/elevation. Zoom (`cameraDistance`) and the recentered pivot
+// (`cameraTarget`) change too.
 function updateCameraPosition() {
-  const elevationRad = THREE.MathUtils.degToRad(CAMERA_ELEVATION_DEG);
-  const azimuthRad = THREE.MathUtils.degToRad(CAMERA_AZIMUTH_DEG);
+  const dir = cameraDirection();
   camera.position.set(
-    cameraTarget.x + cameraDistance * Math.cos(elevationRad) * Math.sin(azimuthRad),
-    cameraTarget.y + cameraDistance * Math.sin(elevationRad),
-    cameraTarget.z + cameraDistance * Math.cos(elevationRad) * Math.cos(azimuthRad),
+    cameraTarget.x + cameraDistance * dir.x,
+    cameraTarget.y + cameraDistance * dir.y,
+    cameraTarget.z + cameraDistance * dir.z,
   );
   camera.lookAt(cameraTarget.x, cameraTarget.y, cameraTarget.z);
+}
+
+function clampElevation(deg) {
+  return THREE.MathUtils.clamp(deg, -CAMERA_ELEVATION_LIMIT_DEG, CAMERA_ELEVATION_LIMIT_DEG);
+}
+
+function orbitCameraBy(deltaAzimuthDeg, deltaElevationDeg) {
+  cameraSnap = null;
+  cameraAzimuthDeg += deltaAzimuthDeg;
+  cameraElevationDeg = clampElevation(cameraElevationDeg + deltaElevationDeg);
+}
+
+// Animates the camera to the given view, turning the short way around.
+function snapCameraTo(azimuthDeg, elevationDeg) {
+  const deltaAzimuth = ((((azimuthDeg - cameraAzimuthDeg + 180) % 360) + 360) % 360) - 180;
+  cameraSnap = {
+    startTime: performance.now(),
+    fromAzimuth: cameraAzimuthDeg,
+    deltaAzimuth,
+    fromElevation: cameraElevationDeg,
+    toElevation: clampElevation(elevationDeg),
+  };
+}
+
+function updateCameraSnap() {
+  if (!cameraSnap) return;
+  const t = Math.min((performance.now() - cameraSnap.startTime) / CAMERA_SNAP_MS, 1);
+  const eased = t * t * (3 - 2 * t);
+  cameraAzimuthDeg = cameraSnap.fromAzimuth + cameraSnap.deltaAzimuth * eased;
+  cameraElevationDeg = cameraSnap.fromElevation + (cameraSnap.toElevation - cameraSnap.fromElevation) * eased;
+  if (t === 1) cameraSnap = null;
 }
 
 function setCameraDistance(distance) {
@@ -127,9 +177,11 @@ function onWindowResize() {
 function renderLoop() {
   requestAnimationFrame(renderLoop);
   updateControls();
+  updateCameraSnap();
   // Re-applied every frame (cheap) so a recentered pivot (after a drag)
   // is reflected immediately, not just on the next explicit zoom/rotate.
   updateCameraPosition();
   positionLightAt45(keyLight);
   renderer.render(scene, camera);
+  renderViewCube();
 }

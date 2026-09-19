@@ -25,6 +25,17 @@ canvas {
   user-select: none;
 }
 
+/* Transparent hit area; the cube itself is drawn by viewcube.js into this rect. */
+#viewcube {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 120px;
+  height: 120px;
+  cursor: grab;
+  user-select: none;
+}
+
 #instructions strong {
   font-weight: 600;
 }

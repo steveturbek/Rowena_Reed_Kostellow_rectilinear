@@ -3,6 +3,7 @@
 
 function init() {
   initScene();
+  initViewCube();
   // initSelection() must run before initCubes(): generating the first
   // batch of cubes calls clearSelection(), which needs the highlight
   // meshes that initSelection() creates.

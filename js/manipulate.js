@@ -7,6 +7,7 @@
 // A plain click on the selected cube (no drag) drops back to face selection.
 
 const DRAG_THRESHOLD_PX = 5;
+const EXTRUDE_MAX_FACING = 0.98; // |viewDir . faceNormal| above this = face seen head-on
 
 let dragState = null;
 
@@ -62,7 +63,10 @@ function onManipulatePointerDown(event) {
   const s1 = worldToScreenPx(p1);
   const screenNormalDir = new THREE.Vector2(s1.x - s0.x, s1.y - s0.y);
   const screenNormalLen = screenNormalDir.length();
-  const validNormalProjection = screenNormalLen > 0.001;
+  // A face seen head-on (e.g. the front face from the FRONT view) has no
+  // usable screen direction along its normal, so it can't be pushed/pulled.
+  const viewDir = p0.clone().sub(camera.position).normalize();
+  const validNormalProjection = Math.abs(viewDir.dot(worldNormal)) < EXTRUDE_MAX_FACING;
   if (validNormalProjection) screenNormalDir.divideScalar(screenNormalLen);
 
   dragState = {

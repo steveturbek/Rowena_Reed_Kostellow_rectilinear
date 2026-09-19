@@ -23,7 +23,7 @@ The three cuboids always stay connected (each touches at least one of the others
 - 3 matte white cuboids that must touch
 - the cubes can intersect and pass through each other
 - Must sit on a featureless #999 gray surface, no horizon
-- fixed camera angle at 45 degrees to center of object, default zoom to see all cubes.
+- camera starts at a 45 degree angle to center of object, default zoom to see all cubes. The view cube can leave that view.
 - User can zoom in and out
 - objects collection can rotate on center of base face
 - bright white single studio light positioned at a 45-degree horizontal angle and 45 degrees above the subject
@@ -37,6 +37,7 @@ The three cuboids always stay connected (each touches at least one of the others
 - Escape clears the current selection
 - mouse wheel, or up/down arrow keys, to zoom in and out
 - left/right arrow keys rotate the whole group around its base center
+- **view cube** (top right, like Fusion 360): drag it to orbit the camera, click one of its faces to snap the camera to that view (top, front, left, ...). A face you are looking at head-on can't be push/pulled, so nudge the view first.
 
 ## Technical
 
@@ -65,6 +66,7 @@ The three cuboids always stay connected (each touches at least one of the others
 │   ├── selection.js      # click/double-click/Tab picking, highlight visuals
 │   ├── manipulate.js      # drag-to-move and push/pull-to-resize
 │   ├── controls.js         # keyboard + mouse-wheel rotate/zoom
+│   ├── viewcube.js          # top-right view cube: drag to orbit, click a face to snap
 │   └── main.js               # wires the modules together, starts the render loop
 ```
 

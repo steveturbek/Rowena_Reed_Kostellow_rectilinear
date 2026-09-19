@@ -1,0 +1,173 @@
+// View cube (top right): a small, world-axis-aligned cube that mirrors the
+// main camera's orientation. Drag it to orbit the camera, click a face to
+// snap the camera to that view. It is drawn into a scissored corner of the
+// main canvas; a transparent DOM overlay (#viewcube) receives the mouse, so
+// its events never reach the scene underneath.
+
+const VIEWCUBE_CAMERA_DISTANCE = 4;
+const VIEWCUBE_DRAG_THRESHOLD_PX = 4;
+const VIEWCUBE_ORBIT_DEG_PER_PX = 0.6;
+
+// Order matches BoxGeometry's material groups: +x, -x, +y, -y, +z, -z.
+// A null azimuth keeps the current one. TOP uses azimuth 0 so its label reads
+// upright: the +y face's texture has its top edge toward world -z.
+const VIEWCUBE_FACES = [
+  { label: "RIGHT", azimuth: 90, elevation: 0 },
+  { label: "LEFT", azimuth: -90, elevation: 0 },
+  { label: "TOP", azimuth: 0, elevation: 90 },
+  { label: "BOTTOM", azimuth: null, elevation: -90 },
+  { label: "FRONT", azimuth: 0, elevation: 0 },
+  { label: "BACK", azimuth: 180, elevation: 0 },
+];
+
+let viewCubeEl;
+let viewCubeScene;
+let viewCubeCamera;
+let viewCubeMesh;
+let viewCubeRaycaster;
+let viewCubeMaterials = [];
+let viewCubeTextures = []; // per face: { normal, hover }
+let viewCubeHoverIndex = -1;
+let viewCubeRect = { x: 0, y: 0, size: 120 };
+let viewCubeDrag = null;
+
+function initViewCube() {
+  viewCubeEl = document.getElementById("viewcube");
+
+  viewCubeScene = new THREE.Scene();
+  viewCubeCamera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+  viewCubeRaycaster = new THREE.Raycaster();
+
+  for (const face of VIEWCUBE_FACES) {
+    const textures = { normal: makeViewCubeTexture(face.label, false), hover: makeViewCubeTexture(face.label, true) };
+    viewCubeTextures.push(textures);
+    viewCubeMaterials.push(new THREE.MeshBasicMaterial({ map: textures.normal, toneMapped: false }));
+  }
+  viewCubeMesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), viewCubeMaterials);
+  viewCubeScene.add(viewCubeMesh);
+
+  updateViewCubeRect();
+  window.addEventListener("resize", updateViewCubeRect);
+  viewCubeEl.addEventListener("mousemove", onViewCubeMouseMove);
+  viewCubeEl.addEventListener("mouseleave", onViewCubeMouseLeave);
+  viewCubeEl.addEventListener("mousedown", onViewCubeMouseDown);
+}
+
+function makeViewCubeTexture(label, hovered) {
+  const size = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = hovered ? "#8fb8ff" : "#e9e9e9";
+  ctx.fillRect(0, 0, size, size);
+  ctx.strokeStyle = "#666666";
+  ctx.lineWidth = 6;
+  ctx.strokeRect(3, 3, size - 6, size - 6);
+  ctx.fillStyle = "#333333";
+  ctx.font = "bold 22px -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, size / 2, size / 2);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.encoding = THREE.sRGBEncoding;
+  return texture;
+}
+
+function updateViewCubeRect() {
+  const r = viewCubeEl.getBoundingClientRect();
+  viewCubeRect = { x: r.left, y: window.innerHeight - r.bottom, size: r.width };
+}
+
+// Draws the view cube over the corner of the canvas, after the main scene.
+function renderViewCube() {
+  viewCubeCamera.position.copy(cameraDirection()).multiplyScalar(VIEWCUBE_CAMERA_DISTANCE);
+  viewCubeCamera.lookAt(0, 0, 0);
+
+  const { x, y, size } = viewCubeRect;
+  renderer.autoClear = false;
+  renderer.setViewport(x, y, size, size);
+  renderer.setScissor(x, y, size, size);
+  renderer.setScissorTest(true);
+  renderer.clearDepth();
+  renderer.render(viewCubeScene, viewCubeCamera);
+  renderer.setScissorTest(false);
+  renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+  renderer.autoClear = true;
+}
+
+// Returns the index into VIEWCUBE_FACES under the mouse, or -1.
+function pickViewCubeFace(event) {
+  const r = viewCubeEl.getBoundingClientRect();
+  const ndc = new THREE.Vector2(
+    ((event.clientX - r.left) / r.width) * 2 - 1,
+    -((event.clientY - r.top) / r.height) * 2 + 1,
+  );
+  viewCubeRaycaster.setFromCamera(ndc, viewCubeCamera);
+  const hit = viewCubeRaycaster.intersectObject(viewCubeMesh)[0];
+  return hit ? hit.face.materialIndex : -1;
+}
+
+function setViewCubeHover(index) {
+  if (index === viewCubeHoverIndex) return;
+  viewCubeHoverIndex = index;
+  viewCubeMaterials.forEach((material, i) => {
+    material.map = i === index ? viewCubeTextures[i].hover : viewCubeTextures[i].normal;
+  });
+}
+
+function onViewCubeMouseMove(event) {
+  if (!viewCubeDrag) setViewCubeHover(pickViewCubeFace(event));
+}
+
+function onViewCubeMouseLeave() {
+  if (!viewCubeDrag) setViewCubeHover(-1);
+}
+
+function onViewCubeMouseDown(event) {
+  if (event.button !== 0) return;
+  event.preventDefault();
+
+  viewCubeDrag = {
+    startX: event.clientX,
+    startY: event.clientY,
+    lastX: event.clientX,
+    lastY: event.clientY,
+    faceIndex: pickViewCubeFace(event),
+    moved: false,
+  };
+  window.addEventListener("mousemove", onViewCubeDragMove);
+  window.addEventListener("mouseup", onViewCubeDragEnd);
+}
+
+function onViewCubeDragMove(event) {
+  const drag = viewCubeDrag;
+  if (!drag.moved) {
+    if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < VIEWCUBE_DRAG_THRESHOLD_PX) return;
+    drag.moved = true;
+    setViewCubeHover(-1);
+  }
+
+  // Dragging right swings the camera left, so the scene turns with the mouse.
+  orbitCameraBy(
+    -(event.clientX - drag.lastX) * VIEWCUBE_ORBIT_DEG_PER_PX,
+    (event.clientY - drag.lastY) * VIEWCUBE_ORBIT_DEG_PER_PX,
+  );
+  drag.lastX = event.clientX;
+  drag.lastY = event.clientY;
+}
+
+function onViewCubeDragEnd() {
+  window.removeEventListener("mousemove", onViewCubeDragMove);
+  window.removeEventListener("mouseup", onViewCubeDragEnd);
+
+  const drag = viewCubeDrag;
+  viewCubeDrag = null;
+
+  if (!drag.moved && drag.faceIndex >= 0) {
+    const face = VIEWCUBE_FACES[drag.faceIndex];
+    snapCameraTo(face.azimuth === null ? cameraAzimuthDeg : face.azimuth, face.elevation);
+  }
+}
