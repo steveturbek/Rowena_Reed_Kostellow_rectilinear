@@ -63,14 +63,15 @@ Render three random cubes. User can:
 - select each, with mouse and keyboard
 - push/pull a face to resize a cube (CAD-style extrude)
 - select a whole cube and drag it to move it in relation to the other two
+- share the current model and view as a link (copy it from the address bar)
 
 The three cuboids always stay connected (each touches at least one of the others) - if a move or resize would break that, it snaps back.
 
 ## Rules of the Model
 
-- there is a consistent uniform measurement unit, objects will also have a derived relative measurement to each other
+- there is a consistent uniform measurement unit (sizes snap to half a unit, positions to a quarter unit), objects will also have a derived relative measurement to each other
 - 3 matte white cuboids that must touch
-- the cubes can intersect and pass through each other
+- the cuboids can intersect and pass through each other
 - Must sit on a featureless #999 gray surface, no horizon
 - camera starts at a 45 degree angle to center of object, default zoom to see all cubes. The view cube can leave that view.
 - User can zoom in and out
@@ -80,7 +81,7 @@ The three cuboids always stay connected (each touches at least one of the others
 
 ## Controls
 
-- **move a cube:** double click it, or press Tab / Shift+Tab, to select the whole cube (orange outline), then click and drag it
+- **move a cube:** double click it, or press Tab / Shift+Tab, to select the whole cube (orange outline), then click and drag it (moves snap to quarter-unit steps)
 - **resize a cube:** click a face to select it (blue highlight), then click and drag it outward/inward to push/pull that side, in clean half-unit steps
 - clicking a face of an already-selected cube (without dragging) switches back to selecting just that face
 - Escape clears the current selection
@@ -88,6 +89,7 @@ The three cuboids always stay connected (each touches at least one of the others
 - **view cube** (top right, like Fusion 360): drag it to orbit the camera, click one of its faces to snap the camera to that view (top, front, left, ...). A face you are looking at head-on can't be push/pulled, so nudge the view first.
 - **Home** (house icon, upper-left of the view cube): returns the camera to the default straight-on, 45 degree view. Zoom is left alone.
 - **Play / pause** (under Home): slowly turns the view around the cubes at a constant pitch. Any manual view change (dragging or swiping, clicking a view cube face or Home) or a click in the scene pauses it.
+- **share:** once you change the model or the view, the address bar holds a link to exactly what is on screen - copy it to share. Opening the page with no link still starts with three new random cubes.
 
 ## Technical
 
@@ -95,6 +97,17 @@ The three cuboids always stay connected (each touches at least one of the others
 - inspired by https://github.com/steveturbek/Tangible-Interfaces-Submarine-Design-Project
 - keyboard control
 - click on cube face to adjust
+
+### Shareable links
+
+The model and view are encoded in the query string (see `js/urlstate.js`):
+
+`?a=3,2,4,0,1,0&b=2,5,2,2.5,2.5,0.75&c=4,1,3,0.5,0.5,-3.5&view=0,45,12`
+
+- `a`, `b`, `c`: each cube's `width,height,depth,x,y,z`, in units
+- `view`: the camera's `azimuth,elevation,distance` (degrees, degrees, units)
+
+A link that is malformed, or whose cubes don't all touch, is ignored and random cubes are used instead. Values are clamped and snapped to the grid on load, so a hand-edited link can't put a cube below the floor.
 
 ### Set up
 
@@ -117,13 +130,13 @@ The three cuboids always stay connected (each touches at least one of the others
 │   ├── manipulate.js      # drag-to-move and push/pull-to-resize
 │   ├── controls.js         # trackpad: swipe = orbit, pinch = zoom
 │   ├── viewcube.js          # top-right view cube (drag to orbit, click a face to snap) plus Home and auto-rotate buttons
+│   ├── urlstate.js          # shareable links: model + view in the query string
 │   └── main.js               # wires the modules together, starts the render loop
 ```
 
 ## Nice to have
 
 - Save / Export / Load
-- Save data in URL for sharing
 - physical joystick control
 
 ## Still to test
@@ -131,3 +144,4 @@ The three cuboids always stay connected (each touches at least one of the others
 - **Mouse without a trackpad:** the plain scroll wheel now orbits (up/down) and zoom needs Ctrl + scroll. Check whether that is usable, or whether plain-wheel zoom should come back.
 - **Safari:** it reports a pinch as a gesture event rather than Ctrl + wheel, so pinch-to-zoom probably doesn't work there yet.
 - **Trackpads with natural scrolling turned off:** swipe direction is probably reversed.
+- **Shared links:** open a copied link in another browser or on another machine and check the model and view match. Also check that a page opened from disk (`file://`) doesn't error when the browser refuses to rewrite the address bar (links only work from a hosted copy).

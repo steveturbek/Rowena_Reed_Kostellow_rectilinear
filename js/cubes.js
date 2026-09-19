@@ -3,6 +3,10 @@
 // so the model stays simple and (eventually) trivially save/load-able.
 
 const UNIT_STEP = 0.5;
+// Cube positions snap to half the size step. A cube's half-size is a multiple
+// of this, so cubes can sit exactly flush, and every value stays exactly
+// representable, which lets a shared link round-trip with no rounding at all.
+const POSITION_STEP = UNIT_STEP / 2;
 const MIN_UNITS = 1;
 const MAX_UNITS = 6;
 const MIN_OVERLAP_FRACTION = 0.2;
@@ -146,7 +150,7 @@ function placeAgainstCube(newCube, baseCube) {
     MIN_OVERLAP_FRACTION + Math.random() * (1 - MIN_OVERLAP_FRACTION);
   const perpOffset =
     (Math.random() < 0.5 ? -1 : 1) * maxShorterHalf * (1 - overlapFraction);
-  newCube.position[perpAxis] = baseCube.position[perpAxis] + perpOffset;
+  newCube.position[perpAxis] = snapToStep(baseCube.position[perpAxis] + perpOffset, POSITION_STEP);
 
   // Rest on the ground.
   newCube.position.y = newCube.height / 2;
@@ -195,15 +199,16 @@ function initCubes() {
   cubeGroup = new THREE.Group();
   scene.add(cubeGroup);
 
-  regenerateCubes();
+  // A shared link (see urlstate.js) supplies the cubes; otherwise they are random.
+  regenerateCubes(cubesFromUrl());
 }
 
-function regenerateCubes() {
+function regenerateCubes(startingCubes) {
   for (const cube of cubes) {
     cubeGroup.remove(cube.mesh);
   }
 
-  cubes = generateRandomCubes();
+  cubes = startingCubes || generateRandomCubes();
 
   for (const cube of cubes) {
     syncMeshFromData(cube);

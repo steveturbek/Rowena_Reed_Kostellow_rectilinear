@@ -11,6 +11,7 @@ function init() {
   initManipulate();
   initControls();
   initCubes();
+  initUrlState(); // after initCubes(): applies a shared view, then watches for changes
   renderLoop();
 }
 

@@ -127,12 +127,13 @@ function applyMoveDrag(event) {
   const localDelta = worldDelta.applyQuaternion(cubeGroup.quaternion.clone().invert());
 
   const cube = dragState.cube;
-  cube.position.x = dragState.startSnapshot.position.x + localDelta.x;
+  const start = dragState.startSnapshot.position;
+  cube.position.x = snapToStep(start.x + localDelta.x, POSITION_STEP);
   cube.position.y = Math.max(
     cube.height / 2, // bottom face stops at the floor
-    dragState.startSnapshot.position.y + localDelta.y
+    snapToStep(start.y + localDelta.y, POSITION_STEP)
   );
-  cube.position.z = dragState.startSnapshot.position.z + localDelta.z;
+  cube.position.z = snapToStep(start.z + localDelta.z, POSITION_STEP);
 
   syncMeshFromData(cube);
 }
