@@ -1,30 +1,45 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Rectilinear Volumes — RRK Exercise One</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="css/style.css" />
-</head>
-<body>
-  <div id="instructions">
-    <strong>Rectilinear Volumes</strong><br />
-    <em>Move:</em> double-click a cube (or Tab), then drag it.<br />
-    <em>Push/pull:</em> click a face, then drag it in or out.<br />
-    Escape clears the selection.<br />
+  <head>
+    <meta charset="UTF-8" />
+    <title>Rectilinear Volumes — RRK Exercise One</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div id="instructions">
+      <details class="" open>
+        <summary>Rectilinear Volumes Exercise</summary>
+        <em>Move:</em> double-click a cube (or Tab), then drag it.<br />
+        <em>Push/pull:</em> click a face, then drag it in or out.<br />
+        <!-- Escape clears the selection.<br />
     <em>Orbit:</em> swipe, or drag the view cube (top right); click a cube face to snap to that view.<br />
-    <em>Zoom:</em> pinch, or Ctrl + scroll.
-  </div>
+    <em>Zoom:</em> pinch, or Ctrl + scroll. -->
+        <a href="https://github.com/steveturbek/Rowena_Reed_Kostellow_rectilinear" style="color: white; text-decoration: underline" target="_blank"
+          >More Info and Exercise Prompts</a
+        >
+      </details>
+    </div>
 
-  <div id="viewcube"></div>
+    <div id="view-widget">
+      <div id="viewcube"></div>
+      <div id="view-buttons">
+        <button id="home-button" type="button" title="Home view" aria-label="Home view">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg>
+        </button>
+        <button id="rotate-button" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path id="rotate-icon" d="" /></svg>
+        </button>
+      </div>
+    </div>
 
-  <script src="js/three.min.js"></script>
-  <script src="js/scene.js"></script>
-  <script src="js/viewcube.js"></script>
-  <script src="js/cubes.js"></script>
-  <script src="js/selection.js"></script>
-  <script src="js/manipulate.js"></script>
-  <script src="js/controls.js"></script>
-  <script src="js/main.js"></script>
-</body>
+    <script src="js/three.min.js"></script>
+    <script src="js/scene.js"></script>
+    <script src="js/viewcube.js"></script>
+    <script src="js/cubes.js"></script>
+    <script src="js/selection.js"></script>
+    <script src="js/manipulate.js"></script>
+    <script src="js/controls.js"></script>
+    <script src="js/main.js"></script>
+  </body>
 </html>

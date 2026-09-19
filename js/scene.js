@@ -14,6 +14,7 @@ const LIGHT_AZIMUTH_OFFSET_DEG = -45;
 // Stops just short of straight up/down, where lookAt's up vector degenerates.
 const CAMERA_ELEVATION_LIMIT_DEG = 89.5;
 const CAMERA_SNAP_MS = 350;
+const AUTO_ROTATE_DEG_PER_SEC = 10; // a slow turntable spin: about 36 s per turn
 
 let scene, camera, renderer;
 let groundMesh;
@@ -23,6 +24,8 @@ let cameraDistance = 10;
 let cameraAzimuthDeg = DEFAULT_CAMERA_AZIMUTH_DEG;
 let cameraElevationDeg = DEFAULT_CAMERA_ELEVATION_DEG;
 let cameraSnap = null;
+let autoRotate = false;
+let lastFrameTime = performance.now();
 
 function initScene() {
   scene = new THREE.Scene();
@@ -123,6 +126,7 @@ function clampElevation(deg) {
 }
 
 function orbitCameraBy(deltaAzimuthDeg, deltaElevationDeg) {
+  setAutoRotate(false); // a manual view change takes over from auto-rotate
   cameraSnap = null;
   cameraAzimuthDeg += deltaAzimuthDeg;
   cameraElevationDeg = clampElevation(cameraElevationDeg + deltaElevationDeg);
@@ -130,6 +134,7 @@ function orbitCameraBy(deltaAzimuthDeg, deltaElevationDeg) {
 
 // Animates the camera to the given view, turning the short way around.
 function snapCameraTo(azimuthDeg, elevationDeg) {
+  setAutoRotate(false);
   const deltaAzimuth = ((((azimuthDeg - cameraAzimuthDeg + 180) % 360) + 360) % 360) - 180;
   cameraSnap = {
     startTime: performance.now(),
@@ -147,6 +152,21 @@ function updateCameraSnap() {
   cameraAzimuthDeg = cameraSnap.fromAzimuth + cameraSnap.deltaAzimuth * eased;
   cameraElevationDeg = cameraSnap.fromElevation + (cameraSnap.toElevation - cameraSnap.fromElevation) * eased;
   if (t === 1) cameraSnap = null;
+}
+
+function setAutoRotate(on) {
+  if (on === autoRotate) return;
+  autoRotate = on;
+  updateAutoRotateButton();
+}
+
+// Turns the view around the cubes like a turntable: azimuth only, so the
+// pitch never changes.
+function updateAutoRotate() {
+  const now = performance.now();
+  const dt = Math.min((now - lastFrameTime) / 1000, 0.1);
+  lastFrameTime = now;
+  if (autoRotate) cameraAzimuthDeg -= AUTO_ROTATE_DEG_PER_SEC * dt;
 }
 
 function setCameraDistance(distance) {
@@ -180,6 +200,7 @@ function onWindowResize() {
 
 function renderLoop() {
   requestAnimationFrame(renderLoop);
+  updateAutoRotate();
   updateCameraSnap();
   // Re-applied every frame (cheap) so a recentered pivot (after a drag)
   // is reflected immediately, not just on the next explicit zoom/rotate.

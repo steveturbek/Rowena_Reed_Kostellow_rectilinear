@@ -2,11 +2,16 @@
 // main camera's orientation. Drag it to orbit the camera, click a face to
 // snap the camera to that view. It is drawn into a scissored corner of the
 // main canvas; a transparent DOM overlay (#viewcube) receives the mouse, so
-// its events never reach the scene underneath.
+// its events never reach the scene underneath. The Home and auto-rotate
+// buttons in its upper-left corner are wired up here too.
 
 const VIEWCUBE_CAMERA_DISTANCE = 4;
 const VIEWCUBE_DRAG_THRESHOLD_PX = 4;
 const VIEWCUBE_ORBIT_DEG_PER_PX = 0.6;
+
+// Material Design "play_arrow" and "pause" icon paths (24x24 viewBox).
+const PLAY_ICON_PATH = "M8 5v14l11-7z";
+const PAUSE_ICON_PATH = "M6 19h4V5H6v14zm8-14v14h4V5h-4z";
 
 // Order matches BoxGeometry's material groups: +x, -x, +y, -y, +z, -z.
 // A null azimuth keeps the current one. TOP uses azimuth 0 so its label reads
@@ -30,6 +35,8 @@ let viewCubeTextures = []; // per face: { normal, hover }
 let viewCubeHoverIndex = -1;
 let viewCubeRect = { x: 0, y: 0, size: 120 };
 let viewCubeDrag = null;
+let rotateButtonEl;
+let rotateIconEl;
 
 function initViewCube() {
   viewCubeEl = document.getElementById("viewcube");
@@ -51,6 +58,8 @@ function initViewCube() {
   viewCubeEl.addEventListener("mousemove", onViewCubeMouseMove);
   viewCubeEl.addEventListener("mouseleave", onViewCubeMouseLeave);
   viewCubeEl.addEventListener("mousedown", onViewCubeMouseDown);
+
+  initViewButtons();
 }
 
 function makeViewCubeTexture(label, hovered) {
@@ -170,4 +179,24 @@ function onViewCubeDragEnd() {
     const face = VIEWCUBE_FACES[drag.faceIndex];
     snapCameraTo(face.azimuth === null ? cameraAzimuthDeg : face.azimuth, face.elevation);
   }
+}
+
+function initViewButtons() {
+  document.getElementById("home-button").addEventListener("click", () => {
+    snapCameraTo(DEFAULT_CAMERA_AZIMUTH_DEG, DEFAULT_CAMERA_ELEVATION_DEG);
+  });
+
+  rotateButtonEl = document.getElementById("rotate-button");
+  rotateIconEl = document.getElementById("rotate-icon");
+  rotateButtonEl.addEventListener("click", () => setAutoRotate(!autoRotate));
+  updateAutoRotateButton();
+}
+
+// Called by scene.js whenever auto-rotate turns on or off, including when a
+// manual view change pauses it.
+function updateAutoRotateButton() {
+  const label = autoRotate ? "Pause rotation" : "Play rotation";
+  rotateIconEl.setAttribute("d", autoRotate ? PAUSE_ICON_PATH : PLAY_ICON_PATH);
+  rotateButtonEl.title = label;
+  rotateButtonEl.setAttribute("aria-label", label);
 }

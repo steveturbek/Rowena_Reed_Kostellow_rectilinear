@@ -2,86 +2,13 @@
 
 Interactive Web page demonstrating Exercise One: Rectilinear Volumes from Rowena Reed Kostellow's book "Elements of Design" [Elements of design : Rowena Reed Kostellow and the structure of visual relationships](https://archive.org/details/elementsofdesign0000hann/page/48/mode/2up) by Hannah, Gail Greet
 
-## Approach
-
-Weekend workshop project to make a Web based 3D modeling toy to help students quickly explore the RRK exercise.
-
-## Usage
-
-Render three random cubes. User can:
-
-- orbit the camera around the cubes, zoom in and out
-- select each, with mouse and keyboard
-- push/pull a face to resize a cube (CAD-style extrude)
-- select a whole cube and drag it to move it in relation to the other two
-
-The three cuboids always stay connected (each touches at least one of the others) - if a move or resize would break that, it snaps back.
-
-## Rules of the Model
-
-- there is a consistent uniform measurement unit, objects will also have a derived relative measurement to each other
-- 3 matte white cuboids that must touch
-- the cubes can intersect and pass through each other
-- Must sit on a featureless #999 gray surface, no horizon
-- camera starts at a 45 degree angle to center of object, default zoom to see all cubes. The view cube can leave that view.
-- User can zoom in and out
-- objects collection can rotate on center of base face
-- bright white single studio light positioned at a 45-degree horizontal angle and 45 degrees above the subject, moving with the camera so every view is lit the same way
-- shadows cast on ground and other cubes
-
-## Controls
-
-- **move a cube:** double click it, or press Tab / Shift+Tab, to select the whole cube (orange outline), then click and drag it
-- **resize a cube:** click a face to select it (blue highlight), then click and drag it outward/inward to push/pull that side, in clean half-unit steps
-- clicking a face of an already-selected cube (without dragging) switches back to selecting just that face
-- Escape clears the current selection
-- **trackpad:** a two-finger swipe orbits the camera (like dragging the view cube), a pinch zooms. With a mouse, Ctrl + scroll zooms.
-- **view cube** (top right, like Fusion 360): drag it to orbit the camera, click one of its faces to snap the camera to that view (top, front, left, ...). A face you are looking at head-on can't be push/pulled, so nudge the view first.
-
-## Technical
-
-- Three.js framework (r128, vendored in `js/three.min.js` - kept at this revision so the page runs from a plain `file://` open, no build step or server)
-- inspired by https://github.com/steveturbek/Tangible-Interfaces-Submarine-Design-Project
-- keyboard control
-- click on cube face to adjust
-
-### Set up
-
-1. [Download this repo zip](https://github.com/steveturbek/Rowena_Reed_Kostellow_rectilinear/archive/refs/heads/main.zip) (or `git clone`)
-1. Unzip, perhaps move the folder to your Documents folder
-1. In Google Chrome, open the `index.html` file
-1. Explore!
-
-### Project Structure
-
-```
-├── index.html          # entry point - open this in a browser
-├── css/
-│   └── style.css       # minimal on-screen instructions overlay
-├── js/
-│   ├── three.min.js    # vendored Three.js r128 (UMD build)
-│   ├── scene.js        # renderer, camera, lighting, ground, render loop
-│   ├── cubes.js         # cube data model, random generation, "must touch" rule
-│   ├── selection.js      # click/double-click/Tab picking, highlight visuals
-│   ├── manipulate.js      # drag-to-move and push/pull-to-resize
-│   ├── controls.js         # trackpad: swipe = orbit, pinch = zoom
-│   ├── viewcube.js          # top-right view cube: drag to orbit, click a face to snap
-│   └── main.js               # wires the modules together, starts the render loop
-```
-
-## Nice to have
-
-- Save / Export / Load
-- Save data in URL for sharing
-- physical joystick control
-
-## Links
+## References
 
 - [Rowena Reed Kostellow Saturday Class](https://www.youtube.com/watch?v=Ubf5ZVzeSKU)
 - [Rowena Reed Kostellow (July 6, 1900 – September 17, 1988) was an American industrial designer and professor](https://en.wikipedia.org/wiki/Rowena_Reed_Kostellow)
 - [Rowena Group](https://www.rowenagroup.org/)
 
-#
+## Exercise Prompts
 
 “At first working with 3-dimensional forms in this way is difficult. But soon you will begin to speak this language. You really have to make these beautiful. That sounds pretentious. How can you make three blocks beautiful? But I know that you can.”
 
@@ -127,3 +54,80 @@ Unity is the visual glue that holds everything together. You know that you have 
 Take your best sketch and develop it in plaster. You may want to make your plaster sketch larger than your clay piece—perhaps one and a half or two times larger. Differences in proportion will become more apparent as you enlarge the design.
 
 Enlarging is not simply a matter of copying. It requires attention to subtle changes to achieve a harmonious whole.
+
+## Usage
+
+Render three random cubes. User can:
+
+- orbit the camera around the cubes, zoom in and out
+- select each, with mouse and keyboard
+- push/pull a face to resize a cube (CAD-style extrude)
+- select a whole cube and drag it to move it in relation to the other two
+
+The three cuboids always stay connected (each touches at least one of the others) - if a move or resize would break that, it snaps back.
+
+## Rules of the Model
+
+- there is a consistent uniform measurement unit, objects will also have a derived relative measurement to each other
+- 3 matte white cuboids that must touch
+- the cubes can intersect and pass through each other
+- Must sit on a featureless #999 gray surface, no horizon
+- camera starts at a 45 degree angle to center of object, default zoom to see all cubes. The view cube can leave that view.
+- User can zoom in and out
+- objects collection can rotate on center of base face
+- bright white single studio light positioned at a 45-degree horizontal angle and 45 degrees above the subject, moving with the camera so every view is lit the same way
+- shadows cast on ground and other cubes
+
+## Controls
+
+- **move a cube:** double click it, or press Tab / Shift+Tab, to select the whole cube (orange outline), then click and drag it
+- **resize a cube:** click a face to select it (blue highlight), then click and drag it outward/inward to push/pull that side, in clean half-unit steps
+- clicking a face of an already-selected cube (without dragging) switches back to selecting just that face
+- Escape clears the current selection
+- **trackpad:** a two-finger swipe orbits the camera (like dragging the view cube), a pinch zooms. With a mouse, Ctrl + scroll zooms.
+- **view cube** (top right, like Fusion 360): drag it to orbit the camera, click one of its faces to snap the camera to that view (top, front, left, ...). A face you are looking at head-on can't be push/pulled, so nudge the view first.
+- **Home** (house icon, upper-left of the view cube): returns the camera to the default straight-on, 45 degree view. Zoom is left alone.
+- **Play / pause** (under Home): slowly turns the view around the cubes at a constant pitch. Any manual view change (dragging or swiping, clicking a view cube face or Home) or a click in the scene pauses it.
+
+## Technical
+
+- Three.js framework (r128, vendored in `js/three.min.js` - kept at this revision so the page runs from a plain `file://` open, no build step or server)
+- inspired by https://github.com/steveturbek/Tangible-Interfaces-Submarine-Design-Project
+- keyboard control
+- click on cube face to adjust
+
+### Set up
+
+1. [Download this repo zip](https://github.com/steveturbek/Rowena_Reed_Kostellow_rectilinear/archive/refs/heads/main.zip) (or `git clone`)
+1. Unzip, perhaps move the folder to your Documents folder
+1. In Google Chrome, open the `index.html` file
+1. Explore!
+
+### Project Structure
+
+```
+├── index.html          # entry point - open this in a browser
+├── css/
+│   └── style.css       # minimal on-screen instructions overlay
+├── js/
+│   ├── three.min.js    # vendored Three.js r128 (UMD build)
+│   ├── scene.js        # renderer, camera, lighting, ground, render loop
+│   ├── cubes.js         # cube data model, random generation, "must touch" rule
+│   ├── selection.js      # click/double-click/Tab picking, highlight visuals
+│   ├── manipulate.js      # drag-to-move and push/pull-to-resize
+│   ├── controls.js         # trackpad: swipe = orbit, pinch = zoom
+│   ├── viewcube.js          # top-right view cube (drag to orbit, click a face to snap) plus Home and auto-rotate buttons
+│   └── main.js               # wires the modules together, starts the render loop
+```
+
+## Nice to have
+
+- Save / Export / Load
+- Save data in URL for sharing
+- physical joystick control
+
+## Still to test
+
+- **Mouse without a trackpad:** the plain scroll wheel now orbits (up/down) and zoom needs Ctrl + scroll. Check whether that is usable, or whether plain-wheel zoom should come back.
+- **Safari:** it reports a pinch as a gesture event rather than Ctrl + wheel, so pinch-to-zoom probably doesn't work there yet.
+- **Trackpads with natural scrolling turned off:** swipe direction is probably reversed.

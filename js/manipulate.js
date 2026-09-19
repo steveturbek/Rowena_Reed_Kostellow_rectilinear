@@ -27,6 +27,9 @@ function worldToScreenPx(worldPos) {
 function onManipulatePointerDown(event) {
   if (event.button !== 0) return;
 
+  // Editing while the view turns would fight the drag math.
+  setAutoRotate(false);
+
   const hit = raycastAtPointer(event);
   if (!hit) {
     clearSelection();
