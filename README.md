@@ -86,6 +86,7 @@ The three cuboids always stay connected (each touches at least one of the others
 - clicking a face of an already-selected cube (without dragging) switches back to selecting just that face
 - Escape clears the current selection
 - **trackpad:** a two-finger swipe orbits the camera (like dragging the view cube), a pinch zooms. With a mouse, Ctrl + scroll zooms.
+- **touchscreen:** tap a face to select it, double-tap a cube to select the whole cube, then drag to push/pull or move it. Drag the view cube to orbit. Pinch with two fingers to zoom. Portrait framing is not done yet, so the cubes can be cropped on a narrow screen.
 - **view cube** (top right, like Fusion 360): drag it to orbit the camera, click one of its faces to snap the camera to that view (top, front, left, ...). A face you are looking at head-on can't be push/pulled, so nudge the view first.
 - **Home** (house icon, upper-left of the view cube): returns the camera to the default straight-on, 45 degree view. Zoom is left alone.
 - **Play / pause** (under Home): slowly turns the view around the cubes at a constant pitch. Any manual view change (dragging or swiping, clicking a view cube face or Home) or a click in the scene pauses it.
@@ -128,7 +129,7 @@ A link that is malformed, or whose cubes don't all touch, is ignored and random 
 │   ├── cubes.js         # cube data model, random generation, "must touch" rule
 │   ├── selection.js      # click/double-click/Tab picking, highlight visuals
 │   ├── manipulate.js      # drag-to-move and push/pull-to-resize
-│   ├── controls.js         # trackpad: swipe = orbit, pinch = zoom
+│   ├── controls.js         # trackpad swipe = orbit, pinch = zoom; touchscreen pinch = zoom
 │   ├── viewcube.js          # top-right view cube (drag to orbit, click a face to snap) plus Home and auto-rotate buttons
 │   ├── urlstate.js          # shareable links: model + view in the query string
 │   └── main.js               # wires the modules together, starts the render loop
@@ -145,3 +146,4 @@ A link that is malformed, or whose cubes don't all touch, is ignored and random 
 - **Safari:** it reports a pinch as a gesture event rather than Ctrl + wheel, so pinch-to-zoom probably doesn't work there yet.
 - **Trackpads with natural scrolling turned off:** swipe direction is probably reversed.
 - **Shared links:** open a copied link in another browser or on another machine and check the model and view match. Also check that a page opened from disk (`file://`) doesn't error when the browser refuses to rewrite the address bar (links only work from a hosted copy).
+- **iPhone / iPad / other touchscreens:** dragging (move, push/pull, view cube orbit) now uses Pointer Events. Check it on real devices, especially double-tap selecting a cube and fingertip accuracy on small faces. Also check that a two-finger pinch zooms the camera and does not zoom the whole page.

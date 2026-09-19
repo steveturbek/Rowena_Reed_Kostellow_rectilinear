@@ -7,12 +7,15 @@
 // A plain click on the selected cube (no drag) drops back to face selection.
 
 const DRAG_THRESHOLD_PX = 5;
+const TOUCH_DRAG_THRESHOLD_PX = 10; // a fingertip wobbles more than a mouse, so a tap isn't read as a drag
 const EXTRUDE_MAX_FACING = 0.98; // |viewDir . faceNormal| above this = face seen head-on
 
 let dragState = null;
 
+// Pointer Events cover mouse, touch and pen with one code path. The canvas sets
+// touch-action: none (style.css) so the browser leaves finger drags to us.
 function initManipulate() {
-  renderer.domElement.addEventListener("mousedown", onManipulatePointerDown);
+  renderer.domElement.addEventListener("pointerdown", onManipulatePointerDown);
 }
 
 function worldToScreenPx(worldPos) {
@@ -25,7 +28,7 @@ function worldToScreenPx(worldPos) {
 }
 
 function onManipulatePointerDown(event) {
-  if (event.button !== 0) return;
+  if (event.button !== 0 || !event.isPrimary) return; // ignore extra fingers
 
   // Editing while the view turns would fight the drag math.
   setAutoRotate(false);
@@ -84,24 +87,27 @@ function onManipulatePointerDown(event) {
     startWorldPoint: hit.point.clone(),
     startClientX: event.clientX,
     startClientY: event.clientY,
+    pointerId: event.pointerId,
+    dragThreshold: event.pointerType === "mouse" ? DRAG_THRESHOLD_PX : TOUCH_DRAG_THRESHOLD_PX,
     mode: null,
     screenNormalDir: validNormalProjection ? screenNormalDir : null,
     screenPixelsPerWorldUnit: validNormalProjection ? screenNormalLen / 0.1 : 0,
   };
 
-  window.addEventListener("mousemove", onManipulatePointerMove);
-  window.addEventListener("mouseup", onManipulatePointerUp);
+  window.addEventListener("pointermove", onManipulatePointerMove);
+  window.addEventListener("pointerup", onManipulatePointerUp);
+  window.addEventListener("pointercancel", onManipulatePointerUp);
 }
 
 function onManipulatePointerMove(event) {
-  if (!dragState) return;
+  if (!dragState || event.pointerId !== dragState.pointerId) return;
 
   const dx = event.clientX - dragState.startClientX;
   const dy = event.clientY - dragState.startClientY;
   const totalDeltaLen = Math.hypot(dx, dy);
 
   if (dragState.mode === null) {
-    if (totalDeltaLen < DRAG_THRESHOLD_PX) return;
+    if (totalDeltaLen < dragState.dragThreshold) return;
     dragState.mode = dragState.intent;
   }
 
@@ -170,29 +176,46 @@ function applyExtrudeDrag(dx, dy) {
   syncMeshFromData(cube);
 }
 
-function onManipulatePointerUp() {
-  if (!dragState) return;
+function onManipulatePointerUp(event) {
+  if (!dragState || event.pointerId !== dragState.pointerId) return;
 
-  window.removeEventListener("mousemove", onManipulatePointerMove);
-  window.removeEventListener("mouseup", onManipulatePointerUp);
+  stopDragListening();
 
   const cube = dragState.cube;
 
   if (dragState.mode !== null) {
-    const stillValid = cubesFormConnectedChain(cubes);
-    if (!stillValid) {
-      cube.position.x = dragState.startSnapshot.position.x;
-      cube.position.y = dragState.startSnapshot.position.y;
-      cube.position.z = dragState.startSnapshot.position.z;
-      cube.width = dragState.startSnapshot.width;
-      cube.height = dragState.startSnapshot.height;
-      cube.depth = dragState.startSnapshot.depth;
-      syncMeshFromData(cube);
-    }
+    if (!cubesFormConnectedChain(cubes)) revertDrag();
     recenterGroupPivot();
   } else if (dragState.intent === "move") {
     setFaceSelection(cube, dragState.faceKey);
   }
 
+  dragState = null;
+}
+
+function stopDragListening() {
+  window.removeEventListener("pointermove", onManipulatePointerMove);
+  window.removeEventListener("pointerup", onManipulatePointerUp);
+  window.removeEventListener("pointercancel", onManipulatePointerUp);
+}
+
+// Puts the dragged cube back exactly as it was when the drag began.
+function revertDrag() {
+  const { cube, startSnapshot } = dragState;
+  cube.position.x = startSnapshot.position.x;
+  cube.position.y = startSnapshot.position.y;
+  cube.position.z = startSnapshot.position.z;
+  cube.width = startSnapshot.width;
+  cube.height = startSnapshot.height;
+  cube.depth = startSnapshot.depth;
+  syncMeshFromData(cube);
+}
+
+// Abandons an in-progress drag. Used when a second finger lands: that is a
+// pinch, not an edit, so whatever the first finger had already changed is undone.
+function cancelManipulateDrag() {
+  if (!dragState) return;
+  stopDragListening();
+  revertDrag();
   dragState = null;
 }

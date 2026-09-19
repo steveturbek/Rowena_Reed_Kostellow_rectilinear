@@ -7,6 +7,7 @@
 
 const VIEWCUBE_CAMERA_DISTANCE = 4;
 const VIEWCUBE_DRAG_THRESHOLD_PX = 4;
+const VIEWCUBE_TOUCH_DRAG_THRESHOLD_PX = 10; // a fingertip wobbles more than a mouse
 const VIEWCUBE_ORBIT_DEG_PER_PX = 0.6;
 
 // Material Design "play_arrow" and "pause" icon paths (24x24 viewBox).
@@ -55,9 +56,9 @@ function initViewCube() {
 
   updateViewCubeRect();
   window.addEventListener("resize", updateViewCubeRect);
-  viewCubeEl.addEventListener("mousemove", onViewCubeMouseMove);
-  viewCubeEl.addEventListener("mouseleave", onViewCubeMouseLeave);
-  viewCubeEl.addEventListener("mousedown", onViewCubeMouseDown);
+  viewCubeEl.addEventListener("pointermove", onViewCubePointerMove);
+  viewCubeEl.addEventListener("pointerleave", onViewCubePointerLeave);
+  viewCubeEl.addEventListener("pointerdown", onViewCubePointerDown);
 
   initViewButtons();
 }
@@ -127,19 +128,22 @@ function setViewCubeHover(index) {
   });
 }
 
-function onViewCubeMouseMove(event) {
-  if (!viewCubeDrag) setViewCubeHover(pickViewCubeFace(event));
+// Hover highlighting is a mouse thing; on touch it would just stick after a tap.
+function onViewCubePointerMove(event) {
+  if (event.pointerType === "mouse" && !viewCubeDrag) setViewCubeHover(pickViewCubeFace(event));
 }
 
-function onViewCubeMouseLeave() {
+function onViewCubePointerLeave() {
   if (!viewCubeDrag) setViewCubeHover(-1);
 }
 
-function onViewCubeMouseDown(event) {
-  if (event.button !== 0) return;
+function onViewCubePointerDown(event) {
+  if (event.button !== 0 || !event.isPrimary) return; // ignore extra fingers
   event.preventDefault();
 
   viewCubeDrag = {
+    pointerId: event.pointerId,
+    dragThreshold: event.pointerType === "mouse" ? VIEWCUBE_DRAG_THRESHOLD_PX : VIEWCUBE_TOUCH_DRAG_THRESHOLD_PX,
     startX: event.clientX,
     startY: event.clientY,
     lastX: event.clientX,
@@ -147,14 +151,16 @@ function onViewCubeMouseDown(event) {
     faceIndex: pickViewCubeFace(event),
     moved: false,
   };
-  window.addEventListener("mousemove", onViewCubeDragMove);
-  window.addEventListener("mouseup", onViewCubeDragEnd);
+  window.addEventListener("pointermove", onViewCubeDragMove);
+  window.addEventListener("pointerup", onViewCubeDragEnd);
+  window.addEventListener("pointercancel", onViewCubeDragEnd);
 }
 
 function onViewCubeDragMove(event) {
   const drag = viewCubeDrag;
+  if (event.pointerId !== drag.pointerId) return;
   if (!drag.moved) {
-    if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < VIEWCUBE_DRAG_THRESHOLD_PX) return;
+    if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < drag.dragThreshold) return;
     drag.moved = true;
     setViewCubeHover(-1);
   }
@@ -168,12 +174,15 @@ function onViewCubeDragMove(event) {
   drag.lastY = event.clientY;
 }
 
-function onViewCubeDragEnd() {
-  window.removeEventListener("mousemove", onViewCubeDragMove);
-  window.removeEventListener("mouseup", onViewCubeDragEnd);
+function onViewCubeDragEnd(event) {
+  if (event.pointerId !== viewCubeDrag.pointerId) return;
+  window.removeEventListener("pointermove", onViewCubeDragMove);
+  window.removeEventListener("pointerup", onViewCubeDragEnd);
+  window.removeEventListener("pointercancel", onViewCubeDragEnd);
 
   const drag = viewCubeDrag;
   viewCubeDrag = null;
+  if (event.type === "pointercancel") return; // the browser took the touch over; don't treat it as a tap
 
   if (!drag.moved && drag.faceIndex >= 0) {
     const face = VIEWCUBE_FACES[drag.faceIndex];

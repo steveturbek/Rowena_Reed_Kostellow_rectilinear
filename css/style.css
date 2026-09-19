@@ -9,6 +9,11 @@ body {
 
 canvas {
   display: block;
+  /* The app handles finger drags itself; without this the browser claims them
+     for scrolling and pinch-zooming the page. */
+  touch-action: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 #instructions {
@@ -47,6 +52,9 @@ canvas {
   height: 100%;
   cursor: grab;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
 }
 
 #view-buttons {
@@ -70,6 +78,7 @@ canvas {
   background: rgba(0, 0, 0, 0.55);
   color: #fff;
   cursor: pointer;
+  touch-action: manipulation; /* no double-tap-zoom delay on taps */
 }
 
 #view-buttons button:hover {
