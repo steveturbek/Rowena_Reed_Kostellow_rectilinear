@@ -12,8 +12,10 @@ Render three random cubes. User can:
 
 - spin cube group, zoom in and out
 - select each, with mouse and keyboard
-- alter the height, width, length
-- alter the position of each cube in relation to the other
+- push/pull a face to resize a cube (CAD-style extrude)
+- drag a face sideways to move a cube in relation to the other two
+
+The three cuboids always stay connected (each touches at least one of the others) - if a move or resize would break that, it snaps back.
 
 ## Rules of the Model
 
@@ -29,26 +31,49 @@ Render three random cubes. User can:
 
 ## Controls
 
-- click on face to select
-- mouse wheel to move in / out
-- double click on face to select cube.
-- mouse drag to move along plane of selected face
-- left right arrow keys rotate group
-- up down arrow keys zoom in out
+- click on a face to select it (highlights blue)
+- drag sideways, along the face, to move the cube
+- drag outward/inward, along the face's normal, to push/pull (resize) that side of the cube, in clean half-unit steps
+- double click a cube, or press Tab / Shift+Tab, to select the whole cube (highlights with an outline)
+- Escape clears the current selection
+- mouse wheel, or up/down arrow keys, to zoom in and out
+- left/right arrow keys rotate the whole group around its base center
 
 ## Technical
 
-- Three.js framework
+- Three.js framework (r128, vendored in `js/three.min.js` - kept at this revision so the page runs from a plain `file://` open, no build step or server)
 - inspired by https://github.com/steveturbek/Tangible-Interfaces-Submarine-Design-Project
 - keyboard control
 - click on cube face to adjust
+
+### Set up
+
+1. [Download this repo zip](https://github.com/steveturbek/Rowena_Reed_Kostellow_rectilinear/archive/refs/heads/main.zip) (or `git clone`)
+1. Unzip, perhaps move the folder to your Documents folder
+1. In Google Chrome, open the `index.html` file
+1. Explore!
+
+### Project Structure
+
+```
+├── index.html          # entry point - open this in a browser
+├── css/
+│   └── style.css       # minimal on-screen instructions overlay
+├── js/
+│   ├── three.min.js    # vendored Three.js r128 (UMD build)
+│   ├── scene.js        # renderer, camera, lighting, ground, render loop
+│   ├── cubes.js         # cube data model, random generation, "must touch" rule
+│   ├── selection.js      # click/double-click/Tab picking, highlight visuals
+│   ├── manipulate.js      # drag-to-move and push/pull-to-resize
+│   ├── controls.js         # keyboard + mouse-wheel rotate/zoom
+│   └── main.js               # wires the modules together, starts the render loop
+```
 
 ## Nice to have
 
 - Save / Export / Load
 - Save data in URL for sharing
 - physical joystick control
-- zoom + -
 
 ## Links
 
