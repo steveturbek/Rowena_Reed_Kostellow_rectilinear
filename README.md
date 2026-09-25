@@ -1,9 +1,12 @@
 # Rowena Reed Kostellow Exercise One: Rectilinear Volume
 
-Interactive Web page demonstrating Exercise One: Rectilinear Volumes from Rowena Reed Kostellow's book "Elements of Design" [Elements of design : Rowena Reed Kostellow and the structure of visual relationships](https://archive.org/details/elementsofdesign0000hann/page/48/mode/2up) by Hannah, Gail Greet
+Interactive web page demonstrating Exercise One: Rectilinear Volumes from Rowena Reed Kostellow's book "Elements of Design"
+
+<https://turbek.com/Rowena_Reed_Kostellow_rectilinear>
 
 ## References
 
+- [Elements of design : Rowena Reed Kostellow and the structure of visual relationships](https://archive.org/details/elementsofdesign0000hann/page/48/mode/2up) by Hannah, Gail Greet
 - [Rowena Reed Kostellow Saturday Class](https://www.youtube.com/watch?v=Ubf5ZVzeSKU)
 - [Rowena Reed Kostellow (July 6, 1900 – September 17, 1988) was an American industrial designer and professor](https://en.wikipedia.org/wiki/Rowena_Reed_Kostellow)
 - [Rowena Group](https://www.rowenagroup.org/)

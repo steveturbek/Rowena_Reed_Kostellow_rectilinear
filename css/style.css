@@ -30,7 +30,7 @@ canvas {
   /* pointer-events: none;
   user-select: none; */
   max-height: 90%;
-  overflow-y: scroll;
+  overflow-y: visible;
 }
 
 /* The view cube widget. #viewcube is a transparent hit area; viewcube.js draws
