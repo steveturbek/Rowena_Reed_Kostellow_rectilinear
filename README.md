@@ -88,7 +88,7 @@ The three cuboids always stay connected (each touches at least one of the others
 - **resize a cube:** click a face to select it (blue highlight), then click and drag it outward/inward to push/pull that side, in clean half-unit steps
 - clicking a face of an already-selected cube (without dragging) switches back to selecting just that face
 - Escape clears the current selection
-- **trackpad:** a two-finger swipe orbits the camera (like dragging the view cube), a pinch zooms. With a mouse, Ctrl + scroll zooms.
+- **trackpad:** a two-finger swipe orbits the camera (like dragging the view cube), a pinch zooms. With a mouse, drag with the middle (scroll wheel) button to orbit, and Ctrl + scroll zooms. The plain scroll wheel also orbits up/down, because a trackpad swipe arrives as the same event.
 - **touchscreen:** tap a face to select it, double-tap a cube to select the whole cube, then drag to push/pull or move it. Drag the view cube to orbit. Pinch with two fingers to zoom. Portrait framing is not done yet, so the cubes can be cropped on a narrow screen.
 - **view cube** (top right, like Fusion 360): drag it to orbit the camera, click one of its faces to snap the camera to that view (top, front, left, ...). A face you are looking at head-on can't be push/pulled, so nudge the view first.
 - **Home** (house icon, upper-left of the view cube): returns the camera to the default straight-on, 45 degree view. Zoom is left alone.
@@ -132,7 +132,7 @@ A link that is malformed, or whose cubes don't all touch, is ignored and random 
 │   ├── cubes.js         # cube data model, random generation, "must touch" rule
 │   ├── selection.js      # click/double-click/Tab picking, highlight visuals
 │   ├── manipulate.js      # drag-to-move and push/pull-to-resize
-│   ├── controls.js         # trackpad swipe = orbit, pinch = zoom; touchscreen pinch = zoom
+│   ├── controls.js         # trackpad swipe = orbit, pinch = zoom; middle-button drag = orbit; touchscreen pinch = zoom
 │   ├── viewcube.js          # top-right view cube (drag to orbit, click a face to snap) plus Home and auto-rotate buttons
 │   ├── urlstate.js          # shareable links: model + view in the query string
 │   └── main.js               # wires the modules together, starts the render loop
@@ -145,7 +145,7 @@ A link that is malformed, or whose cubes don't all touch, is ignored and random 
 
 ## Still to test
 
-- **Mouse without a trackpad:** the plain scroll wheel now orbits (up/down) and zoom needs Ctrl + scroll. Check whether that is usable, or whether plain-wheel zoom should come back.
+- **Mouse without a trackpad:** the plain scroll wheel orbits (up/down) and zoom needs Ctrl + scroll, with middle-button drag as the free orbit. Check whether that is usable, or whether plain-wheel zoom should come back (a mouse wheel and a trackpad swipe can't be told apart reliably, so swipe-to-orbit would then need a modifier key or a setting).
 - **Safari:** it reports a pinch as a gesture event rather than Ctrl + wheel, so pinch-to-zoom probably doesn't work there yet.
 - **Trackpads with natural scrolling turned off:** swipe direction is probably reversed.
 - **Shared links:** open a copied link in another browser or on another machine and check the model and view match. Also check that a page opened from disk (`file://`) doesn't error when the browser refuses to rewrite the address bar (links only work from a hosted copy).
