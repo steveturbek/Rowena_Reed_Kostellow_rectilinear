@@ -30,7 +30,7 @@ canvas {
   /* pointer-events: none;
   user-select: none; */
   max-height: 90%;
-  overflow-y: visible;
+  overflow-y: hidden;
   scrollbar-width: none;
 }
 
